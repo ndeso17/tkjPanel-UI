@@ -259,9 +259,9 @@
                                 </thead>
                                 <tbody id="folderContents">
                                     @if ($selectedFolder)
-                                        @php
+                                        {{-- @php
                                             dd($folderContents);
-                                        @endphp
+                                        @endphp --}}
                                         @foreach ($folderContents as $item)
                                             <tr>
                                                 <td>
