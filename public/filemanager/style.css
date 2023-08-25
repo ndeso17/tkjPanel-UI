@@ -102,37 +102,71 @@ body {
 .bg-unformat {
     background-color: brown;
 }
+.tcolor-unformat {
+    color: brown;
+}
 
 .bg-video {
     background-color: black;
 }
+.tcolor-video {
+    color: black;
+}
 
 .bg-image {
     background-color: #6c757d;
-    /* Secondary color from Bootstrap */
+}
+.tcolor-image {
+    color: #6c757d;
 }
 
 .bg-sql {
     background-color: #dd24be;
-    /* Light color from Bootstrap */
+}
+.tcolor-sql {
+    color: #dd24be;
 }
 
 .bg-js {
     background-color: #ffc107;
-    /* Warning color from Bootstrap */
+}
+.tcolor-js {
+    color: #ffc107;
 }
 
 .bg-css {
     background-color: #007bff;
     /* Primary color from Bootstrap */
 }
+.tcolor-css {
+    color: #007bff;
+}
 
 .bg-html {
     background-color: #28a745;
-    /* Success color from Bootstrap */
+}
+.tcolor-html {
+    color: #28a745;
 }
 
 .bg-php {
     background-color: #dc3545;
     /* Danger color from Bootstrap */
 }
+.tcolor-php {
+    /* background-color: #dc3545; */
+    color: #dc3545;
+    /* Danger color from Bootstrap */
+}
+.icon-sql {
+    width: 24px;
+    height: 24px;
+    background-image: url("/public/img/mysql.svg");
+    background-size: contain;
+    background-repeat: no-repeat;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 5px;
+}
+
+/* Tambahkan gaya lainnya sesuai dengan kebutuhan Anda */

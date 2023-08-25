@@ -12,6 +12,9 @@
     <link href="https://cdn.jsdelivr.net/npm/boxicons@2.0.7/css/boxicons.min.css" rel="stylesheet" />
     {{-- <script src="https://kit.fontawesome.com/2eee75b418.js" crossorigin="anonymous"></script> --}}
     <link rel="stylesheet" href="{{ asset('filemanager/style.css') }}">
+    <link rel="stylesheet" href="{{ asset('fontawesome/css/fontawesome.css') }}">
+    <link rel="stylesheet" href="{{ asset('fontawesome/css/brands.css') }}">
+    <link rel="stylesheet" href="{{ asset('fontawesome/css/solid.css') }}">
 </head>
 
 <body>
@@ -259,9 +262,6 @@
                                 </thead>
                                 <tbody id="folderContents">
                                     @if ($selectedFolder)
-                                        {{-- @php
-                                            dd($folderContents);
-                                        @endphp --}}
                                         @foreach ($folderContents as $item)
                                             <tr>
                                                 <td>
@@ -305,33 +305,132 @@
                                                                 {{ $item['name'] }}
                                                             </div>
                                                         @else
-                                                            <div>
+                                                            {{-- <div>
                                                                 <i
                                                                     class='bx bxs-folder me-2 font-24 text-secondary'></i>
                                                             </div>
                                                             <div class="font-weight-bold text-secondary">
                                                                 {{ $item['name'] }}
-                                                            </div>
-                                                            {{-- @if ($item['size'] == 'Folder')
-                                                                <a
-                                                                    href="{{ route('singkuasa.fileManager', ['folderPath' => $item['name']]) }}">
-                                                                    <div>
-                                                                        <i
-                                                                            class='bx bxs-folder me-2 font-24 text-secondary'></i>
-                                                                    </div>
+                                                            </div> --}}
+                                                            @if ($item['size'] == 'Folder')
+                                                                <a href="#"
+                                                                    data-subFolder="{{ $item['name'] }}"
+                                                                    class="subFolder-link">
                                                                     <div class="font-weight-bold text-secondary">
-                                                                        {{ $item['name'] }}
+                                                                        <i style="vertical-align: middle; margin-right: 5px;"
+                                                                            class='bx bxs-folder me-2 font-24 text-secondary'></i>
+                                                                        <span>{{ $item['name'] }}</span>
+                                                                    </div>
+
+                                                                </a>
+                                                            @else
+                                                                <div class="font-weight-bold text-secondary">
+                                                                    <i style="vertical-align: middle; margin-right: 5px;"
+                                                                        class='bx bxs-folder me-2 font-24 text-secondary'></i>
+                                                                    <span>{{ $item['name'] }}</span>
+                                                                </div>
+                                                            @endif
+                                                        @endif
+                                                    </div>
+                                                </td>
+                                                <td>{{ $item['size'] }}</td>
+                                                <td>{{ $item['permission'] }}</td>
+                                                <td>{{ $item['created_at'] }} | {{ $item['updated_at'] }}</td>
+                                                <td title="{{ implode(', ', $item['owner']) }}">{{ $item['grup'] }}
+                                                </td>
+                                                <td>
+                                                    @if ($item['size'] == 'Folder')
+                                                        <a class="me-2 font-24"
+                                                            style="text-decoration: none; color: black;"
+                                                            href="#" title="Edit {{ $item['name'] }}">
+                                                            <i class='bx bx-edit-alt'></i>
+                                                        </a>
+                                                        <a class="me-2 font-24"
+                                                            style="text-decoration: none; color: black;"
+                                                            href="#" title="Delete {{ $item['name'] }}">
+                                                            <i class='bx bxs-trash'></i>
+                                                        </a>
+                                                    @else
+                                                        <a class="me-2 font-24"
+                                                            style="text-decoration: none; color: black;"
+                                                            href="#" title="Edit {{ $item['name'] }}">
+                                                            <i class='bx bx-edit-alt'></i>
+                                                        </a>
+                                                        <a class="me-2 font-24"
+                                                            style="text-decoration: none; color: black;"
+                                                            href="#" title="Copy {{ $item['name'] }}">
+                                                            <i class='bx bx-copy-alt'></i>
+                                                        </a>
+                                                        <a class="me-2 font-24"
+                                                            style="text-decoration: none; color: black;"
+                                                            href="#" title="Download {{ $item['name'] }}">
+                                                            <i class='bx bx-cloud-download'></i>
+                                                        </a>
+                                                        <a class="me-2 font-24"
+                                                            style="text-decoration: none; color: black;"
+                                                            href="#" title="Delete {{ $item['name'] }}">
+                                                            <i class='bx bxs-trash'></i>
+                                                        </a>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    @elseif ($selectedSubFolder)
+                                        {{-- @php
+                                            dd($subFolderContents);
+                                        @endphp --}}
+                                        @foreach ($subFolderContents as $item)
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        @if ($item['extension'] == 'php')
+                                                            <div class="font-weight-bold tcolor-php">
+                                                                <i style="vertical-align: middle; margin-right: 5px;"
+                                                                    class='lni lni-php me-2 font-24'></i>
+                                                                <span>{{ $item['name'] }}</span>
+                                                            </div>
+                                                        @elseif ($item['extension'] == 'sql')
+                                                            <div class="font-weight-bold tcolor-sql">
+                                                                <i style="vertical-align: middle; margin-right: 5px;"
+                                                                    class='fa-solid fa-database me-2 font-24'></i>
+                                                                <span>{{ $item['name'] }}</span>
+                                                            </div>
+                                                        @elseif ($item['extension'] == 'js' || $item['extension'] == 'json')
+                                                            <div class="font-weight-bold tcolor-js">
+                                                                <i style="vertical-align: middle; margin-right: 5px;"
+                                                                    class='lni lni-nodejs me-2 font-24'></i>
+                                                                <span>{{ $item['name'] }}</span>
+                                                            </div>
+                                                        @elseif ($item['extension'] == 'html')
+                                                            <div class="font-weight-bold tcolor-html">
+                                                                <i style="vertical-align: middle; margin-right: 5px;"
+                                                                    class='lni lni-html5 me-2 font-24'></i>
+                                                                <span>{{ $item['name'] }}</span>
+                                                            </div>
+                                                        @elseif ($item['extension'] == 'css')
+                                                            <div class="font-weight-bold tcolor-css">
+                                                                <i style="vertical-align: middle; margin-right: 5px;"
+                                                                    class='lni lni-css3 me-2 font-24'></i>
+                                                                <span>{{ $item['name'] }}</span>
+                                                            </div>
+                                                        @else
+                                                            @if ($item['size'] == 'Folder')
+                                                                <a href="#"
+                                                                    data-subFolder="{{ $item['name'] }}"
+                                                                    class="subFolder-link">
+                                                                    <div class="font-weight-bold text-secondary">
+                                                                        <i style="vertical-align: middle; margin-right: 5px;"
+                                                                            class='bx bxs-folder me-2 font-24 text-secondary'></i>
+                                                                        <span>{{ $item['name'] }}</span>
                                                                     </div>
                                                                 </a>
                                                             @else
-                                                                <div>
-                                                                    <i
-                                                                        class='bx bxs-folder me-2 font-24 text-secondary'></i>
-                                                                </div>
                                                                 <div class="font-weight-bold text-secondary">
-                                                                    {{ $item['name'] }}
+                                                                    <i style="vertical-align: middle; margin-right: 5px;"
+                                                                        class='bx bxs-folder me-2 font-24 text-secondary'></i>
+                                                                    <span>{{ $item['name'] }}</span>
                                                                 </div>
-                                                            @endif --}}
+                                                            @endif
                                                         @endif
                                                     </div>
                                                 </td>
@@ -417,6 +516,43 @@
                 const input = document.createElement("input");
                 input.type = "hidden";
                 input.name = "folder";
+                input.value = folderName;
+
+                form.appendChild(csrfInput);
+                form.appendChild(input);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const folderLinks = document.querySelectorAll(".subFolder-link");
+
+            folderLinks.forEach(link => {
+                link.addEventListener("click", function(event) {
+                    event.preventDefault(); // Menghentikan perilaku bawaan tautan
+
+                    const folderName = this.getAttribute("data-subFolder");
+                    sendPostRequest(folderName);
+                });
+            });
+
+            function sendPostRequest(folderName) {
+                const form = document.createElement("form");
+                form.method = "POST";
+                form.action = "{{ route('singkuasa.fileManager') }}"; // Ubah sesuai rute yang benar
+
+                // Tambahkan token CSRF
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                const csrfInput = document.createElement("input");
+                csrfInput.type = "hidden";
+                csrfInput.name = "_token";
+                csrfInput.value = csrfToken;
+
+                const input = document.createElement("input");
+                input.type = "hidden";
+                input.name = "subfolder";
                 input.value = folderName;
 
                 form.appendChild(csrfInput);

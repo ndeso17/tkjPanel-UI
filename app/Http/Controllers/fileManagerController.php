@@ -67,10 +67,13 @@ class fileManagerController extends Controller
         $formattedTotalPhpFileSize = $this->formatBytes($totalPhpFileSize);
         
         $selectedFolder = $request->input('folder');
+        $selectedSubFolder = $request->input('subfolder');
         $folderContents = [];
 
         if ($selectedFolder) {
             $folderPath = "$rootDirectory/$selectedFolder";
+            //Simpan data folderPath Pada sesi yang nantinya akan digunakan kembali
+            session(['folderPath' => $folderPath]);
             $folderContents = scandir($folderPath);
             $folderContents = array_filter($folderContents, function ($item) {
                 return $item !== '.' && $item !== '..';
@@ -104,6 +107,41 @@ class fileManagerController extends Controller
                     'extension' => $extension,
                 ];
             }            
+        } elseif ($selectedSubFolder) {
+            $folderPath = session('folderPath');
+            $targetScan     = $folderPath . '/' . $selectedSubFolder;
+            $subFolderContents = scandir($targetScan);
+            session(['folderPath' => $targetScan]);
+            $subFolderContents = array_filter($subFolderContents, function ($item) {
+                return $item !== '.' && $item !== '..';
+            });
+            $filesSubFolderWithPermission = [];            
+            foreach ($subFolderContents as $item) {
+                $filePath = "$targetScan/$item";
+                $permission = substr(sprintf('%o', fileperms($filePath)), -4);
+                $createdAt = date("M j, Y H:i:s", filectime($filePath));
+                $updatedAt = date("M j, Y H:i:s", filemtime($filePath));
+                if (is_file($filePath)) {
+                    $size = $this->formatBytes(filesize($filePath));
+                } else {
+                    $size = "Folder";
+                }
+                $groupId = filegroup($filePath);
+                $group = $this->getGroupName($groupId);
+                $groupUsers = $this->getGroupUsers($group);
+                $extension = pathinfo($item, PATHINFO_EXTENSION);
+
+                $filesSubFolderWithPermission[] = [
+                    'name' => $item,
+                    'permission' => $permission,
+                    'created_at' => $createdAt,
+                    'updated_at' => $updatedAt,
+                    'size' => $size,
+                    'grup'=> $group,
+                    'owner'=> $groupUsers,
+                    'extension' => $extension,
+                ];
+            }
         }
         $dataSizeFile = [
             'unformat'=>$totalUnformatSize,
@@ -120,6 +158,8 @@ class fileManagerController extends Controller
             'directoryContents' => $filteredContents,
             'selectedFolder' => $selectedFolder,
             'folderContents' => $filesWithPermission ?? [],
+            'selectedSubFolder' => $selectedSubFolder,
+            'subFolderContents' => $filesSubFolderWithPermission ?? [],
             'freeSpace' => $freeSpaceFormatted,
             'usedSpace' => $usedSpaceFormatted,
             'unformatFilesCount' => $unformatFilesCount,
