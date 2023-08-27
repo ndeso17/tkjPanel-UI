@@ -107,17 +107,17 @@ body {
 }
 
 .bg-video {
-    background-color: black;
+    background-color: #5b6696;
 }
 .tcolor-video {
-    color: black;
+    color: #5b6696;
 }
 
 .bg-image {
-    background-color: #6c757d;
+    background-color: #3e158b;
 }
 .tcolor-image {
-    color: #6c757d;
+    color: #3e158b;
 }
 
 .bg-sql {
@@ -170,3 +170,6 @@ body {
 }
 
 /* Tambahkan gaya lainnya sesuai dengan kebutuhan Anda */
+#folderContents td.updated-at {
+    display: none;
+}

@@ -55,4 +55,24 @@ Route::prefix('singkuasa')->group(function () {
         ->name("singkuasa.fileManager");
     Route::post('fileManager', [fileManagerController::class, 'fileManager'])
         ->name("singkuasa.fileManager");
+    Route::post('downloadFile', [fileManagerController::class, 'downloadFile'])
+        ->name("singkuasa.downloadFile");
+    Route::post('renameFiFo', [fileManagerController::class, 'renameFiFo'])
+        ->name("singkuasa.renameFiFo");
+    Route::get('fileEditor', [fileManagerController::class, 'fileEditor'])
+        ->name("singkuasa.fileEditor");
+    Route::post('saveFileEditor', [fileManagerController::class, 'saveFileEditor'])
+        ->name("singkuasa.saveFileEditor");
+    Route::post('deleteFiFo', [fileManagerController::class, 'deleteFiFo'])
+        ->name("singkuasa.deleteFiFo");
+    Route::post('upNewFile', [fileManagerController::class, 'upNewFile'])
+        ->name("singkuasa.upNewFile");
+    Route::post('createNewFolder', [fileManagerController::class, 'createNewFolder'])
+        ->name("singkuasa.createNewFolder");
+    Route::post('createNewFile', [fileManagerController::class, 'createNewFile'])
+        ->name("singkuasa.createNewFile");
+    Route::post('playVideo', [fileManagerController::class, 'playVideo'])
+        ->name("singkuasa.playVideo");
+    Route::post('saveVideo', [fileManagerController::class, 'saveVideo'])
+        ->name("singkuasa.saveVideo");
 });

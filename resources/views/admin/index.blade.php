@@ -94,7 +94,16 @@
         <div class="bungkus-body">
             <ul>
                 <li>
-                    <a href="{{ route('singkuasa.setupApp') }}">
+
+                    <div class="items-body">
+                        <div class="item-image">
+                            <i class='bx bxl-wordpress'></i>
+                        </div>
+                        <div class="item-nama">
+                            <h6>Setup Wordpress</h6>
+                        </div>
+                    </div>
+                    {{-- <a href="{{ route('singkuasa.setupApp') }}">
                         <div class="items-body">
                             <div class="item-image">
                                 <i class='bx bxl-wordpress'></i>
@@ -103,7 +112,7 @@
                                 <h6>Setup Wordpress</h6>
                             </div>
                         </div>
-                    </a>
+                    </a> --}}
                 </li>
                 <li>
                     <div class="items-body">

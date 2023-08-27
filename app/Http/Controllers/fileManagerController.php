@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Session;
 
 class fileManagerController extends Controller
 {
@@ -68,6 +70,7 @@ class fileManagerController extends Controller
         
         $selectedFolder = $request->input('folder');
         $selectedSubFolder = $request->input('subfolder');
+        $folderPathSesion = session('folderPath');
         $folderContents = [];
 
         if ($selectedFolder) {
@@ -84,8 +87,8 @@ class fileManagerController extends Controller
             foreach ($folderContents as $item) {
                 $filePath = "$folderPath/$item";
                 $permission = substr(sprintf('%o', fileperms($filePath)), -4);
-                $createdAt = date("M j, Y H:i:s", filectime($filePath));
-                $updatedAt = date("M j, Y H:i:s", filemtime($filePath));
+                $createdAt = date("d/m/Y H:i:s", filectime($filePath));
+                $updatedAt = date("d/m/Y H:i:s", filemtime($filePath));
                 if (is_file($filePath)) {
                     $size = $this->formatBytes(filesize($filePath));
                 } else {
@@ -107,20 +110,22 @@ class fileManagerController extends Controller
                     'extension' => $extension,
                 ];
             }            
-        } elseif ($selectedSubFolder) {
+        } elseif ($selectedSubFolder || $folderPathSesion) {
             $folderPath = session('folderPath');
             $targetScan     = $folderPath . '/' . $selectedSubFolder;
+            // dd($targetScan);
             $subFolderContents = scandir($targetScan);
             session(['folderPath' => $targetScan]);
             $subFolderContents = array_filter($subFolderContents, function ($item) {
-                return $item !== '.' && $item !== '..';
+                return $item !== '.';
             });
+            // dd($subFolderContents);
             $filesSubFolderWithPermission = [];            
             foreach ($subFolderContents as $item) {
                 $filePath = "$targetScan/$item";
                 $permission = substr(sprintf('%o', fileperms($filePath)), -4);
-                $createdAt = date("M j, Y H:i:s", filectime($filePath));
-                $updatedAt = date("M j, Y H:i:s", filemtime($filePath));
+                $createdAt = date("d/m/Y H:i:s", filectime($filePath));
+                $updatedAt = date("d/m/Y H:i:s", filemtime($filePath));
                 if (is_file($filePath)) {
                     $size = $this->formatBytes(filesize($filePath));
                 } else {
@@ -142,7 +147,10 @@ class fileManagerController extends Controller
                     'extension' => $extension,
                 ];
             }
-        }
+        } 
+        // elseif ($redirectFromDownloadFile) {
+        //     # code...
+        // }
         $dataSizeFile = [
             'unformat'=>$totalUnformatSize,
             'video'=>$totalVideoFileSize,
@@ -154,11 +162,18 @@ class fileManagerController extends Controller
             'php'=>$totalPhpFileSize,
         ];
         // dd($dataSizeFile);
+        $successMessage = Session::get('success');
+        $errorMessage = Session::get('failed');
+        $folderPathNow = session('folderPath');
         return view('admin.fileManager', [
+            'successMessage' => $successMessage,
+            'errorMessage' => $errorMessage,
+            'folderPathNow' => $folderPathNow,
             'directoryContents' => $filteredContents,
             'selectedFolder' => $selectedFolder,
             'folderContents' => $filesWithPermission ?? [],
             'selectedSubFolder' => $selectedSubFolder,
+            'folderPathSesion' => $folderPathSesion,
             'subFolderContents' => $filesSubFolderWithPermission ?? [],
             'freeSpace' => $freeSpaceFormatted,
             'usedSpace' => $usedSpaceFormatted,
@@ -299,5 +314,348 @@ class fileManagerController extends Controller
             }
         }
     }
+    public function downloadFile(Request $request)
+    {
+        $itemDownloads = $request->input('fileDownloads');
+        $folderItem = session('folderPath');
+        $linkDownloadButton     = $folderItem . '/' . $itemDownloads;
+        $downloadedFile = $linkDownloadButton;
+        $response = response()->download($downloadedFile);
+        return $response;
+    }
+    public function renameFiFo(Request $request)
+    {
+        $namaBaru = $request->input('namaBaru');
+        $namaLama = $request->input('namaLama');
+        $folderPath = $request->input('folderPath');
+        $passwordSudo = env('SERVER_PASSWORD_SUDO');
+        $urlEndPoint = "renameFiFo";
+        $postData = [
+            'passwordSudo' => $passwordSudo,
+            'namaBaru' => $namaBaru,
+            'namaLama' => $namaLama,
+            'folderPath' => $folderPath,
+        ];
+        $postDataJson = json_encode($postData);
+        $ch = curl_init();
+        $url = env('URL_API') . '/' . $urlEndPoint . '/?api-key=' . env('PUBLIC_API_KEY') . '&token=' . env('USER_TOKEN_API');
+        // dd($url);
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $postDataJson);
+        $headers = [
+            'Content-Type: application/json'
+        ];
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $response = curl_exec($ch);
+        curl_close($ch);
+        $data = json_decode($response);
+        // dd($data);
+        if ($data != null) {
+            $folderPath = $data[0]->payload->datas->data;
+            session(['folderPath' => $folderPath]);
+            $statusProses = $data[0]->payload->datas->status;
+            $pesanProses  = $data[0]->payload->datas->pesan;
+            $message      = $statusProses ? 'Proses berhasil! ' . $pesanProses : 'Proses Gagal! ' . $pesanProses;
+            if ($statusProses) {
+                Session::flash('success', $message);
+                //Hapus session flash dari failed
+                Session::forget('failed');
+            } else {
+                Session::flash('failed', $message);
+                //Hapus session flash dari success
+                Session::forget('success');
+            }
+            // return Redirect::route('singkuasa.fileManager', ['folderItem' => $folderPath])->header('Refresh', '3');
+            return redirect()->route("singkuasa.fileManager");
+        } else {
+            return view("welcome");
+        }
+    }
+    public function fileEditor(Request $request)
+    {
+        $filePath = $request->input("filePath");
+        $pathInfo = pathinfo($filePath);
+        $ekstensiFile = $pathInfo['extension'];
+        $cleanedFilePath = realpath($filePath);
+        $dirName = pathinfo($cleanedFilePath, PATHINFO_DIRNAME);
+        $baseName    = $pathInfo['basename'];
+        $fileContent = $dirName . '/' . $baseName;
+        $content = file_get_contents($fileContent);
+        $contentJson = response()->json(['content' => $content]);
+        $isiFile = $contentJson->original['content'];
+        return view("admin.fileEditor")->with('content', $isiFile)->with('fileName', $fileContent)->with('ekstensi', $ekstensiFile);
+    }
+    public function saveFileEditor(Request $request)
+    {
+        $namaFile = $request->input('namaFile');
+        $content = $request->input('content');
+        $passwordSudo = env('SERVER_PASSWORD_SUDO');
+        $urlEndPoint = "editFile";
+        $postData = [
+            'passwordSudo' => $passwordSudo,
+            'namaFile' => $namaFile,
+            'content' => $content,
+        ];
+        $postDataJson = json_encode($postData);
+        $ch = curl_init();
+        $url = env('URL_API') . '/' . $urlEndPoint . '/?api-key=' . env('PUBLIC_API_KEY') . '&token=' . env('USER_TOKEN_API');
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $postDataJson);
+        $headers = [
+            'Content-Type: application/json'
+        ];
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $response = curl_exec($ch);
+        curl_close($ch);
+        $data = json_decode($response);
+        // dd($data);
+        if ($data != null) {
+            $statusProses = $data[0]->payload->datas->status;
+            $pesanProses = $data[0]->payload->datas->pesan;
+            
+            $message = $statusProses ? 'Proses berhasil! ' . $pesanProses : 'Proses Gagal! ' . $pesanProses;
+            $status = $statusProses ? 'sukses' : 'gagal';
+            
+            return redirect()->back()->with([
+                'sukses' => $status,
+                'message' => $message,
+            ]);
+            
+        } else {
+            return view("welcome");
+        }        
+    }
+    public function deleteFiFo(Request $request)
+    {
+        $targetFiFo = $request->input('targetFiFo');
+        $passwordSudo = env('SERVER_PASSWORD_SUDO');
+        $urlEndPoint = "deleteFiFo";
+        $postData = [
+            'passwordSudo' => $passwordSudo,
+            'targetFiFo' => $targetFiFo,
+        ];
+        $postDataJson = json_encode($postData);
+        $ch = curl_init();
+        $url = env('URL_API') . '/' . $urlEndPoint . '/?api-key=' . env('PUBLIC_API_KEY') . '&token=' . env('USER_TOKEN_API');
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $postDataJson);
+        $headers = [
+            'Content-Type: application/json'
+        ];
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $response = curl_exec($ch);
+        curl_close($ch);
+        $data = json_decode($response);
+        // dd($data);
+        if ($data != null) {
+            $statusProses = $data[0]->payload->datas->status;
+            $pesanProses = $data[0]->payload->datas->pesan;
+            
+            $message = $statusProses ? 'Proses berhasil! ' . $pesanProses : 'Proses Gagal! ' . $pesanProses;
+            $status = $statusProses ? 'sukses' : 'gagal';
+            
+            return redirect()->back()->with([
+                'sukses' => $status,
+                'message' => $message,
+            ]);
+            
+        } else {
+            return view("welcome");
+        }        
+    }
+    public function createNewFolder(Request $request)
+    {
+        $pathFo = $request->input('pathFo');
+        $namaNewFolder = $request->input('namaNewFolder');
+        $passwordSudo = env('SERVER_PASSWORD_SUDO');
+        $urlEndPoint = "createNewFolder";
+        $postData = [
+            'passwordSudo' => $passwordSudo,
+            'namaNewFolder' => $namaNewFolder,
+            'pathFo' => $pathFo,
+        ];
+        $postDataJson = json_encode($postData);
+        $ch = curl_init();
+        $url = env('URL_API') . '/' . $urlEndPoint . '/?api-key=' . env('PUBLIC_API_KEY') . '&token=' . env('USER_TOKEN_API');
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $postDataJson);
+        $headers = [
+            'Content-Type: application/json'
+        ];
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $response = curl_exec($ch);
+        curl_close($ch);
+        $data = json_decode($response);
+        // dd($data);
+        if ($data != null) {
+            $statusProses = $data[0]->payload->datas->status;
+            $pesanProses = $data[0]->payload->datas->pesan;
+            
+            $message = $statusProses ? 'Proses berhasil! ' . $pesanProses : 'Proses Gagal! ' . $pesanProses;
+            $status = $statusProses ? 'sukses' : 'gagal';
+            
+            return redirect()->back()->with([
+                'sukses' => $status,
+                'message' => $message,
+            ]);
+            
+        } else {
+            return view("welcome");
+        }        
+    }
+    public function createNewFile(Request $request)
+    {
+        $pathFi = $request->input('pathFi');
+        $namaNewFile = $request->input('namaNewFile');
+        $passwordSudo = env('SERVER_PASSWORD_SUDO');
+        $urlEndPoint = "createNewFile";
+        $postData = [
+            'passwordSudo' => $passwordSudo,
+            'namaNewFile' => $namaNewFile,
+            'pathFi' => $pathFi,
+        ];
+        $postDataJson = json_encode($postData);
+        $ch = curl_init();
+        $url = env('URL_API') . '/' . $urlEndPoint . '/?api-key=' . env('PUBLIC_API_KEY') . '&token=' . env('USER_TOKEN_API');
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $postDataJson);
+        $headers = [
+            'Content-Type: application/json'
+        ];
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $response = curl_exec($ch);
+        curl_close($ch);
+        $data = json_decode($response);
+        // dd($data);
+        if ($data != null) {
+            $statusProses = $data[0]->payload->datas->status;
+            $pesanProses = $data[0]->payload->datas->pesan;
+            
+            $message = $statusProses ? 'Proses berhasil! ' . $pesanProses : 'Proses Gagal! ' . $pesanProses;
+            $status = $statusProses ? 'sukses' : 'gagal';
+            
+            return redirect()->back()->with([
+                'sukses' => $status,
+                'message' => $message,
+            ]);
+            
+        } else {
+            return view("welcome");
+        }        
+    }
+    public function upNewFile(Request $request)
+    {
+        $pathFile = $request->input('pathFile');
+        $uploadedFile = $request->file('dataFile');
+        $passwordSudo = env('SERVER_PASSWORD_SUDO');
+        $urlEndPoint = "upNewFile";
+    
+        $postData = [
+            'passwordSudo' => $passwordSudo,
+            'pathFile' => $pathFile,
+            'uploadedFile' => new \CURLFile($uploadedFile->getRealPath(), $uploadedFile->getClientMimeType(), $uploadedFile->getClientOriginalName()),
+        ];
+    
+        $ch = curl_init();
+        $url = env('URL_API') . '/' . $urlEndPoint . '/?api-key=' . env('PUBLIC_API_KEY') . '&token=' . env('USER_TOKEN_API');
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    
+        // Set appropriate headers for sending multipart/form-data
+        $headers = [
+            // 'Content-Type: application/json',
+            'Authorization: Bearer ' . env('USER_TOKEN_API'),
+        ];
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    
+        $response = curl_exec($ch);
+        curl_close($ch);
+        $data = json_decode($response);
+        // dd($data);
+        if ($data != null) {
+            $statusProses = $data[0]->payload->datas->status;
+            $pesanProses = $data[0]->payload->datas->pesan;
+    
+            $message = $statusProses ? 'Proses berhasil! ' . $pesanProses : 'Proses Gagal! ' . $pesanProses;
+            $status = $statusProses ? 'sukses' : 'gagal';
+    
+            return redirect()->back()->with([
+                'sukses' => $status,
+                'message' => $message,
+            ]);
+        } else {
+            return view("welcome");
+        }
+    }
+    public function playVideo(Request $request)
+    {
+        $filePath = $request->input("filePath");
+        $pathInfo = pathinfo($filePath);
+        $ekstensiFile = $pathInfo['extension'];
+        $cleanedFilePath = realpath($filePath);
+        $dirName = pathinfo($cleanedFilePath, PATHINFO_DIRNAME);
+        $baseName    = $pathInfo['basename'];
+        $fileContent = $dirName . '/' . $baseName;
+        $arrayExplode = explode('/', $fileContent);
+        $targetWord = "public_html";
+        $jumlahKemunculan = 0;
 
+        $publicHtmlIndex = array_search("public_html", $arrayExplode);
+
+        
+        foreach ($arrayExplode as $elemen) {
+            if ($elemen === $targetWord) {
+                $jumlahKemunculan++;
+            }
+        }
+
+        if ($jumlahKemunculan === 1) {
+            if ($publicHtmlIndex !== false && $publicHtmlIndex + 1 < count($arrayExplode)) {
+                $remainingParts = array_slice($arrayExplode, $publicHtmlIndex + 1);
+                $desiredPath = implode('/', $remainingParts);
+                echo $desiredPath;
+            } else {
+                $desiredPath = null;
+            }
+            $domain = $arrayExplode[3];
+        } else {
+            if ($publicHtmlIndex !== false && $publicHtmlIndex + 2 < count($arrayExplode)) {
+                $remainingParts = array_slice($arrayExplode, $publicHtmlIndex + 3);
+                $desiredPath = implode('/', $remainingParts);
+                echo $desiredPath;
+            } else {
+                $desiredPath = null;
+            }
+            $domain = $arrayExplode[5];
+        }
+        if ($desiredPath !== null) {
+            # code...
+            $link     = 'https://' . $domain.'/'.$desiredPath;
+            return view("admin.videoPlayer")->with('fileName', $fileContent)->with('ekstensi', $ekstensiFile)->with('link', $link)->with('desiredPath', $desiredPath);
+        } else {
+            # code...
+            return view("welcome");
+        }
+        
+    }
+    public function saveVideo(Request $request)
+    {
+        // dd($request->input());
+        $itemDownloads = $request->input('namaFile');
+        $response = response()->download($itemDownloads);
+        return $response;
+    }
+    
 }

@@ -9,13 +9,9 @@ class UserViewController extends Controller
     public function index()
     {
         $title = "Dashboard";
-
+        //Hapus session dari session(['folderPath' => $folderPath]);
+        session()->forget('folderPath');
         return view('admin.index')->with('title', $title);
-    }
-    //! FILE MANAGER
-    public function fileManager()
-    {
-        return view("admin.tinyfilemanager.fileManager");
     }
     // !FTP MANAGEMENT
     public function listFtpClient()
