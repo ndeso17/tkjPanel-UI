@@ -164,7 +164,7 @@
         <div class="bungkus-body">
             <ul>
                 <li>
-                    <a href="https://labnaxgrinting.kom/phpmyadmin/">
+                    <a href="{{ $urlPhpMyadmin }}" target="_blank">
                         <div class="items-body">
                             <div class="item-image">
                                 <i class='bx bxl-php'></i>

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\serverStatsController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserViewController;
 use App\Http\Controllers\fileManagerController;
@@ -75,4 +76,8 @@ Route::prefix('singkuasa')->group(function () {
         ->name("singkuasa.playVideo");
     Route::post('saveVideo', [fileManagerController::class, 'saveVideo'])
         ->name("singkuasa.saveVideo");
+    Route::get('serverStats', [serverStatsController::class, 'serverStats'])
+        ->name("singkuasa.serverStats");
+    Route::get('getServerStatsRealtime', [serverStatsController::class, 'getServerStatsRealtime'])
+        ->name("singkuasa.getServerStatsRealtime");
 });

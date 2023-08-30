@@ -385,6 +385,7 @@ class fileManagerController extends Controller
         $content = file_get_contents($fileContent);
         $contentJson = response()->json(['content' => $content]);
         $isiFile = $contentJson->original['content'];
+        // dd($isiFile);
         return view("admin.fileEditor")->with('content', $isiFile)->with('fileName', $fileContent)->with('ekstensi', $ekstensiFile);
     }
     public function saveFileEditor(Request $request)

@@ -215,7 +215,7 @@ hr:not([size]) {
     position: fixed;
     bottom: 0;
     width: 100%;
-    background-color: #F7F6FB;
+    background-color: #f7f6fb;
     color: black;
     padding: 1rem;
     text-align: right;
@@ -225,4 +225,8 @@ hr:not([size]) {
 .footer p {
     margin: 0;
     font-size: 14px;
+}
+
+#versiOsExpanded {
+    margin-top: 10px; /* Atur jarak dari elemen sebelumnya */
 }

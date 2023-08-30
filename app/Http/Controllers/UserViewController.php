@@ -9,9 +9,12 @@ class UserViewController extends Controller
     public function index()
     {
         $title = "Dashboard";
-        //Hapus session dari session(['folderPath' => $folderPath]);
         session()->forget('folderPath');
-        return view('admin.index')->with('title', $title);
+        session()->forget('active_menu');
+        session(['active_menu' => "indexTool"]);
+        $active_menu = session('active_menu');
+        $urlPhpMyadmin = env('URL_PHPMYADMIN');
+        return view('admin.index')->with('title', $title)->with('urlPhpMyadmin', $urlPhpMyadmin)->with('active_menu', $active_menu);
     }
     // !FTP MANAGEMENT
     public function listFtpClient()

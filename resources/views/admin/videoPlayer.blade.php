@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="{{ asset('fontawesome/css/fontawesome.css') }}">
     <link rel="stylesheet" href="{{ asset('fontawesome/css/brands.css') }}">
     <link rel="stylesheet" href="{{ asset('fontawesome/css/solid.css') }}">
-    <link rel="stylesheet" href="{{ asset('custom/filemanager.css') }}" />
+    <link rel="stylesheet" href="{{ asset('custom/filemanagerVideoPlayer.css') }}" />
     <link href="https://vjs.zencdn.net/8.5.2/video-js.css" rel="stylesheet" />
 </head>
 

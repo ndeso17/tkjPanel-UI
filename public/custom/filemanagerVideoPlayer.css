@@ -11,11 +11,11 @@ body {
 }
 
 #editor {
-    position: absolute;
+    position: relative;
     height: 100%;
     width: 100%;
-    /* margin-top: 10px; */
-    /* justify-content: center; */
-    /* text-align: center; */
+    margin-top: 10px;
+    justify-content: center;
+    text-align: center;
     font-size: 20px;
 }
